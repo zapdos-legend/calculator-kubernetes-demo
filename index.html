@@ -10,8 +10,15 @@
   <body>
     <main class="page-shell">
       <section class="calculator" aria-label="Calculator">
-        <div class="brand">Calculator</div>
-        <output id="display" class="display" aria-live="polite" aria-label="Calculator display">0</output>
+        <header class="calculator__header">
+          <p class="eyebrow">Phase 1</p>
+          <h1>Calculator</h1>
+        </header>
+
+        <div class="display-panel">
+          <p id="expression" class="expression" aria-hidden="true">Ready</p>
+          <output id="display" class="display" aria-live="polite" aria-label="Calculator display">0</output>
+        </div>
 
         <div class="keypad" aria-label="Calculator keypad">
           <button class="key key--action key--wide" type="button" data-action="clear">Clear</button>
