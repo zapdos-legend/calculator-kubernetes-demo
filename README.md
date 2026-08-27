@@ -34,3 +34,5 @@ Then visit [http://localhost:8000](http://localhost:8000) in a browser. No insta
 ## Calculator controls
 
 Use the on-screen keypad, or use number keys and the `+`, `-`, `*`, and `/` keys. Press `Enter` or `=` to calculate, `Backspace` to delete the last digit, and `Escape` to clear the calculator.
+
+The calculator evaluates operations without `eval()`, displays the active expression, supports decimal input, and shows a clear error instead of producing an invalid value when dividing by zero.

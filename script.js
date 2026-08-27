@@ -1,4 +1,5 @@
 const display = document.querySelector("#display");
+const expression = document.querySelector("#expression");
 const keypad = document.querySelector(".keypad");
 
 let currentValue = "0";
@@ -7,9 +8,15 @@ let pendingOperator = null;
 let shouldResetDisplay = false;
 let hasError = false;
 
+const operatorSymbols = { "+": "+", "-": "−", "*": "×", "/": "÷" };
+
 function updateDisplay() {
   display.textContent = currentValue;
   display.classList.toggle("display--error", hasError);
+}
+
+function updateExpression(message = "Ready") {
+  expression.textContent = message;
 }
 
 function clearCalculator() {
@@ -18,6 +25,7 @@ function clearCalculator() {
   pendingOperator = null;
   shouldResetDisplay = false;
   hasError = false;
+  updateExpression();
   updateDisplay();
 }
 
@@ -59,6 +67,7 @@ function showResult(value) {
   if (value === null || !Number.isFinite(value)) {
     currentValue = "Cannot divide by zero";
     hasError = true;
+    updateExpression("Calculation error");
   } else {
     currentValue = Number.parseFloat(value.toPrecision(12)).toString();
     hasError = false;
@@ -85,13 +94,20 @@ function chooseOperator(operator) {
 
   pendingOperator = operator;
   shouldResetDisplay = true;
+  updateExpression(`${currentValue} ${operatorSymbols[operator]}`);
 }
 
 function equals() {
   if (hasError || pendingOperator === null || shouldResetDisplay) return;
 
-  const result = calculate(storedValue, Number(currentValue), pendingOperator);
+  const leftValue = storedValue;
+  const rightValue = Number(currentValue);
+  const operator = pendingOperator;
+  const result = calculate(leftValue, rightValue, operator);
   showResult(result);
+  if (!hasError) {
+    updateExpression(`${leftValue} ${operatorSymbols[operator]} ${rightValue} =`);
+  }
   storedValue = null;
   pendingOperator = null;
   shouldResetDisplay = true;

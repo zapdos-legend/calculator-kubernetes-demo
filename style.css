@@ -34,8 +34,21 @@ button { font: inherit; }
   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
 }
 
-.brand {
-  margin: 0 0 12px 4px;
+.calculator__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 0 4px 14px;
+}
+
+.calculator__header h1 {
+  margin: 0;
+  font-size: 1.15rem;
+  letter-spacing: -0.02em;
+}
+
+.eyebrow {
+  margin: 0;
   color: #94a3b8;
   font-size: 0.75rem;
   font-weight: 700;
@@ -43,10 +56,7 @@ button { font: inherit; }
   text-transform: uppercase;
 }
 
-.display {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
+.display-panel {
   width: 100%;
   min-height: 96px;
   margin-bottom: 18px;
@@ -55,6 +65,22 @@ button { font: inherit; }
   border: 1px solid rgba(148, 163, 184, 0.18);
   border-radius: 16px;
   background: #070b16;
+}
+
+.expression {
+  min-height: 1.25rem;
+  margin: 0 0 10px;
+  overflow: hidden;
+  color: #64748b;
+  font-size: 0.8rem;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.display {
+  display: block;
+  overflow: hidden;
   color: #f8fafc;
   font-size: clamp(2rem, 10vw, 3rem);
   font-variant-numeric: tabular-nums;
@@ -105,7 +131,7 @@ button { font: inherit; }
 @media (max-width: 420px) {
   .page-shell { padding: 12px; }
   .calculator { padding: 16px; border-radius: 20px; }
-  .display { min-height: 82px; }
+  .display-panel { min-height: 82px; }
   .key { min-height: 58px; }
 }
 
