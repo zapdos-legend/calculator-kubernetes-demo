@@ -6,9 +6,9 @@ This project demonstrates a complete beginner-friendly application and DevOps wo
 
 ## Current phase
 
-**Phase 3 — AWS CodeBuild CLI setup**
+**Phase 4 — Docker Hub publishing readiness**
 
-The calculator frontend is packaged in a simple Nginx-based Docker image. The repository now includes a safe, rerunnable PowerShell setup for an AWS CodeBuild project; it does not add a registry push, ECR, Kubernetes, or local cluster configuration.
+The calculator frontend is packaged in a simple Nginx-based Docker image, and the repository includes a safe, rerunnable PowerShell setup for an AWS CodeBuild project. This phase documents how to publish the existing image to Docker Hub when a build environment is available; it does not add credentials, automated registry publishing, ECR, Kubernetes, or local cluster configuration.
 
 ## Technologies used
 
@@ -127,3 +127,28 @@ Wait for any build to finish, then remove the project, its CloudWatch log group,
 ```powershell
 pwsh -File ./aws/codebuild-setup.ps1 -Profile default -Cleanup
 ```
+
+## Phase 4 - Docker Hub
+
+A Docker Hub account is required to publish the image. Create a Docker Hub repository named exactly `calculator-kubernetes-demo`; a public repository is preferred for this demo so Kubernetes can later pull the image without registry credentials.
+
+Build the local image as described in Phase 2, then authenticate interactively:
+
+```bash
+docker login
+```
+
+Tag and push the image, replacing `<DOCKERHUB_USERNAME>` with your Docker Hub username:
+
+```bash
+docker tag calculator-kubernetes-demo:latest <DOCKERHUB_USERNAME>/calculator-kubernetes-demo:latest
+docker push <DOCKERHUB_USERNAME>/calculator-kubernetes-demo:latest
+```
+
+Confirm that the published image can be retrieved:
+
+```bash
+docker pull <DOCKERHUB_USERNAME>/calculator-kubernetes-demo:latest
+```
+
+The Docker Hub image naming convention is `<DOCKERHUB_USERNAME>/calculator-kubernetes-demo:latest`. Never place a Docker Hub password, access token, or other credential in this repository or in a committed command or credential file. `docker login` must obtain credentials outside version control.
