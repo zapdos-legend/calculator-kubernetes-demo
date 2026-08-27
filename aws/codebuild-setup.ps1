@@ -24,6 +24,28 @@ function Invoke-Aws {
     }
 }
 
+function Test-AwsIamRoleExists {
+    # A missing role is an expected AWS CLI failure, so inspect it without
+    # weakening error handling for the rest of the script.
+    $PreviousErrorActionPreference = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = "Continue"
+        $AwsOutput = & aws @AwsArgs iam get-role --role-name $RoleName --output json 2>&1
+        $AwsExitCode = $LASTEXITCODE
+    } finally {
+        $ErrorActionPreference = $PreviousErrorActionPreference
+    }
+
+    if ($AwsExitCode -eq 0) {
+        return $true
+    }
+    if (($AwsOutput | Out-String) -match "NoSuchEntity") {
+        return $false
+    }
+
+    throw "Unable to check whether IAM role '$RoleName' exists: $($AwsOutput | Out-String)"
+}
+
 # Stop before making changes when the selected profile has no usable credentials.
 $IdentityJson = & aws @AwsArgs sts get-caller-identity --output json
 if ($LASTEXITCODE -ne 0) {
@@ -44,8 +66,7 @@ if ($Cleanup) {
         Invoke-Aws logs delete-log-group --log-group-name $LogGroupName
     }
 
-    & aws @AwsArgs iam get-role --role-name $RoleName *> $null
-    if ($LASTEXITCODE -eq 0) {
+    if (Test-AwsIamRoleExists) {
         & aws @AwsArgs iam delete-role-policy --role-name $RoleName --policy-name $PolicyName 2> $null
         if ($LASTEXITCODE -ne 0) {
             Write-Warning "The inline policy was already absent; continuing."
@@ -66,8 +87,7 @@ $TrustPolicy = @{
     })
 } | ConvertTo-Json -Depth 10 -Compress
 
-$RoleJson = & aws @AwsArgs iam get-role --role-name $RoleName --output json 2> $null
-if ($LASTEXITCODE -ne 0) {
+if (-not (Test-AwsIamRoleExists)) {
     Write-Host "Creating service role '$RoleName'..."
     Invoke-Aws iam create-role --role-name $RoleName --assume-role-policy-document $TrustPolicy --description "Minimal service role for the calculator CodeBuild project"
 } else {
