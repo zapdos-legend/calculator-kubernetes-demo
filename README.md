@@ -6,9 +6,9 @@ This project demonstrates a complete beginner-friendly application and DevOps wo
 
 ## Current phase
 
-**Phase 4 — Docker Hub publishing readiness**
+**Phase 5 — Kubernetes deployment preparation**
 
-The calculator frontend is packaged in a simple Nginx-based Docker image, and the repository includes a safe, rerunnable PowerShell setup for an AWS CodeBuild project. This phase documents how to publish the existing image to Docker Hub when a build environment is available; it does not add credentials, automated registry publishing, ECR, Kubernetes, or local cluster configuration.
+The calculator frontend is packaged in a simple Nginx-based Docker image, with AWS CodeBuild setup and Docker Hub publishing instructions. Kubernetes manifests now prepare two calculator replicas and a NodePort Service for a future Killercoda demonstration; this phase does not deploy them to a cluster.
 
 ## Technologies used
 
@@ -152,3 +152,34 @@ docker pull <DOCKERHUB_USERNAME>/calculator-kubernetes-demo:latest
 ```
 
 The Docker Hub image naming convention is `<DOCKERHUB_USERNAME>/calculator-kubernetes-demo:latest`. Never place a Docker Hub password, access token, or other credential in this repository or in a committed command or credential file. `docker login` must obtain credentials outside version control.
+
+## Phase 5 - Kubernetes / Killercoda
+
+Before the demonstration, replace `<DOCKERHUB_USERNAME>` in `kubernetes/deployment.yaml` with the username for the public Docker Hub image. Then, from the repository root in a Killercoda Kubernetes environment, create the Deployment and Service:
+
+```bash
+kubectl apply -f kubernetes/deployment.yaml
+kubectl apply -f kubernetes/service.yaml
+```
+
+Check the created resources:
+
+```bash
+kubectl get deployments
+kubectl get pods
+kubectl get services
+```
+
+Inspect the Deployment and NodePort Service in detail:
+
+```bash
+kubectl describe deployment calculator-deployment
+kubectl describe service calculator-service
+```
+
+Delete the demo resources when finished:
+
+```bash
+kubectl delete -f kubernetes/service.yaml
+kubectl delete -f kubernetes/deployment.yaml
+```
