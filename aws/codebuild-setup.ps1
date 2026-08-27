@@ -24,6 +24,23 @@ function Invoke-Aws {
     }
 }
 
+function Invoke-AwsWithJsonFile {
+    param(
+        [Parameter(Mandatory)][string[]]$Arguments,
+        [Parameter(Mandatory)][string]$JsonOption,
+        [Parameter(Mandatory)][string]$Json
+    )
+
+    $JsonPath = [System.IO.Path]::GetTempFileName()
+    try {
+        # Avoid Windows PowerShell/native-command quoting and UTF-8 BOM issues.
+        [System.IO.File]::WriteAllText($JsonPath, $Json, [System.Text.UTF8Encoding]::new($false))
+        Invoke-Aws @Arguments $JsonOption "file://$JsonPath"
+    } finally {
+        Remove-Item -LiteralPath $JsonPath -Force -ErrorAction SilentlyContinue
+    }
+}
+
 function Test-AwsIamRoleExists {
     # A missing role is an expected AWS CLI failure, so inspect it without
     # weakening error handling for the rest of the script.
@@ -89,7 +106,7 @@ $TrustPolicy = @{
 
 if (-not (Test-AwsIamRoleExists)) {
     Write-Host "Creating service role '$RoleName'..."
-    Invoke-Aws iam create-role --role-name $RoleName --assume-role-policy-document $TrustPolicy --description "Minimal service role for the calculator CodeBuild project"
+    Invoke-AwsWithJsonFile -Arguments @("iam", "create-role", "--role-name", $RoleName, "--description", "Minimal service role for the calculator CodeBuild project") -JsonOption "--assume-role-policy-document" -Json $TrustPolicy
 } else {
     Write-Host "Service role '$RoleName' already exists; reusing it."
     $AttachedPolicies = & aws @AwsArgs iam list-attached-role-policies --role-name $RoleName --query "AttachedPolicies[].PolicyArn" --output text
@@ -104,7 +121,7 @@ if (-not (Test-AwsIamRoleExists)) {
         throw "Existing role '$RoleName' has permissions outside this setup. For safety, no policies were removed. Review the role or choose a dedicated clean role before rerunning."
     }
     # Keep the named role's trust relationship correct without replacing the role.
-    Invoke-Aws iam update-assume-role-policy --role-name $RoleName --policy-document $TrustPolicy
+    Invoke-AwsWithJsonFile -Arguments @("iam", "update-assume-role-policy", "--role-name", $RoleName) -JsonOption "--policy-document" -Json $TrustPolicy
 }
 
 $RoleArn = "arn:aws:iam::${AccountId}:role/$RoleName"
@@ -120,7 +137,7 @@ $LogsPolicy = @{
 } | ConvertTo-Json -Depth 10 -Compress
 
 # put-role-policy creates or replaces this one project-scoped inline policy.
-Invoke-Aws iam put-role-policy --role-name $RoleName --policy-name $PolicyName --policy-document $LogsPolicy
+Invoke-AwsWithJsonFile -Arguments @("iam", "put-role-policy", "--role-name", $RoleName, "--policy-name", $PolicyName) -JsonOption "--policy-document" -Json $LogsPolicy
 
 $ProjectDefinition = @{
     name = $ProjectName
@@ -160,10 +177,10 @@ if ($LASTEXITCODE -ne 0) {
 
 if ($ExistingProject -eq $ProjectName) {
     Write-Host "Updating CodeBuild project '$ProjectName'..."
-    Invoke-Aws codebuild update-project --cli-input-json $ProjectDefinition
+    Invoke-AwsWithJsonFile -Arguments @("codebuild", "update-project") -JsonOption "--cli-input-json" -Json $ProjectDefinition
 } else {
     Write-Host "Creating CodeBuild project '$ProjectName'..."
-    Invoke-Aws codebuild create-project --cli-input-json $ProjectDefinition
+    Invoke-AwsWithJsonFile -Arguments @("codebuild", "create-project") -JsonOption "--cli-input-json" -Json $ProjectDefinition
 }
 
 if ($SkipBuild) {
