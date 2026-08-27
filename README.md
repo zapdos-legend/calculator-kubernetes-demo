@@ -6,9 +6,9 @@ This project demonstrates a complete beginner-friendly application and DevOps wo
 
 ## Current phase
 
-**Phase 2 — Docker Containerization**
+**Phase 3 — AWS CodeBuild CLI setup**
 
-The calculator frontend is packaged in a simple Nginx-based Docker image for local use. Kubernetes, Minikube, cloud resources, CI/CD, and other deployment configuration are intentionally not included yet.
+The calculator frontend is packaged in a simple Nginx-based Docker image. The repository now includes a safe, rerunnable PowerShell setup for an AWS CodeBuild project; it does not add a registry push, ECR, Kubernetes, or local cluster configuration.
 
 ## Technologies used
 
@@ -67,6 +67,63 @@ Use the on-screen keypad, or use number keys and the `+`, `-`, `*`, and `/` keys
 
 ## Phase 3 - AWS CodeBuild
 
-- AWS CodeBuild will build the Docker image remotely.
-- Docker Desktop is not required locally.
-- The Docker Hub push will be handled in the next phase.
+- [`aws/codebuild-setup.ps1`](aws/codebuild-setup.ps1) creates or updates the CodeBuild project in `ap-south-1`, using the public GitHub `main` branch and the repository's `buildspec.yml`.
+- The script first verifies the selected AWS CLI profile, reuses an existing named IAM role when present, and limits that role to writing this project's CloudWatch log group.
+- The build uses the smallest CodeBuild compute type, enables privileged mode for Docker, and produces no external artifacts.
+- No ECR, Docker Hub push, VPC, environment secrets, or Kubernetes resources are configured.
+
+### Prerequisites and placeholders
+
+Install AWS CLI v2 and PowerShell 7, then configure an AWS CLI profile whose caller is allowed to manage the named CodeBuild project, its service role and inline policy, and its CloudWatch log group. The commands expect the profile named `default`. Replace `default` in every command below with another configured profile name when needed. There are no other placeholders.
+
+The CodeBuild service role itself is deliberately narrower than the permissions needed by the human or automation identity running this setup. Public GitHub source checkout is performed by CodeBuild and does not require a source-read IAM permission or a GitHub secret.
+
+### Create or update the project
+
+From the repository root, create/update the role, policy, and project without starting a build:
+
+```powershell
+pwsh -File ./aws/codebuild-setup.ps1 -Profile default -SkipBuild
+```
+
+The script stops before changing resources if credentials for the profile are unavailable. It safely creates the role only when absent, updates its trust policy and project-scoped inline logging policy, and then creates or updates the project. If an existing role has any unrelated inline or managed policies, the script stops rather than deleting permissions that might belong to another workload; review that role manually before rerunning.
+
+Verify the resulting project configuration:
+
+```powershell
+aws --profile default --region ap-south-1 codebuild batch-get-projects --names calculator-kubernetes-demo-build --query "projects[0].{Name:name,Source:source.location,Branch:sourceVersion,Image:environment.image,Compute:environment.computeType,Privileged:environment.privilegedMode,Artifacts:artifacts.type,Role:serviceRole}" --output table
+```
+
+### Start and observe a build
+
+Start a build and retain its ID in PowerShell:
+
+```powershell
+$BuildId = aws --profile default --region ap-south-1 codebuild start-build --project-name calculator-kubernetes-demo-build --query "build.id" --output text
+```
+
+Check its current status and phase:
+
+```powershell
+aws --profile default --region ap-south-1 codebuild batch-get-builds --ids $BuildId --query "builds[0].{Status:buildStatus,Phase:currentPhase,Started:startTime,Ended:endTime}" --output table
+```
+
+Follow CloudWatch output (press Ctrl+C to stop following):
+
+```powershell
+aws --profile default --region ap-south-1 logs tail "/aws/codebuild/calculator-kubernetes-demo-build" --follow
+```
+
+Alternatively, omit `-SkipBuild` to provision the project and start a build in one rerunnable command:
+
+```powershell
+pwsh -File ./aws/codebuild-setup.ps1 -Profile default
+```
+
+### Clean up after the demo
+
+Wait for any build to finish, then remove the project, its CloudWatch log group, inline policy, and dedicated service role:
+
+```powershell
+pwsh -File ./aws/codebuild-setup.ps1 -Profile default -Cleanup
+```
