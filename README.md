@@ -64,3 +64,9 @@ docker rm calculator-demo
 ## Calculator controls
 
 Use the on-screen keypad, or use number keys and the `+`, `-`, `*`, and `/` keys. Press `Enter` or `=` to calculate, `Backspace` to delete the last digit, and `Escape` to clear the calculator.
+
+## Phase 3 - AWS CodeBuild
+
+- AWS CodeBuild will build the Docker image remotely.
+- Docker Desktop is not required locally.
+- The Docker Hub push will be handled in the next phase.

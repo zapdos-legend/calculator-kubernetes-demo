@@ -1,0 +1,16 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo "Checking Docker availability..."
+      - docker --version
+  build:
+    commands:
+      - echo "Building calculator-kubernetes-demo:latest..."
+      - docker build -t calculator-kubernetes-demo:latest .
+  post_build:
+    commands:
+      - echo "Verifying that the Docker image was built..."
+      - docker images
+      - echo "Docker image build verification complete."
