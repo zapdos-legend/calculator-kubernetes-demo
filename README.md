@@ -6,9 +6,9 @@ This project demonstrates a complete beginner-friendly application and DevOps wo
 
 ## Current phase
 
-**Phase 1 — Calculator Web Application**
+**Phase 2 — Docker Containerization**
 
-The current phase contains only the calculator frontend. Docker, Kubernetes, Minikube, cloud resources, CI/CD, and other deployment configuration are intentionally not included yet.
+The calculator frontend is packaged in a simple Nginx-based Docker image for local use. Kubernetes, Minikube, cloud resources, CI/CD, and other deployment configuration are intentionally not included yet.
 
 ## Technologies used
 
@@ -30,6 +30,36 @@ python3 -m http.server 8000
 ```
 
 Then visit [http://localhost:8000](http://localhost:8000) in a browser. No installation or build step is required.
+
+## Phase 2 - Docker
+
+Build the local Docker image:
+
+```bash
+docker build -t calculator-kubernetes-demo:latest .
+```
+
+Start the calculator container and map host port 8080 to Nginx on port 80:
+
+```bash
+docker run -d --name calculator-demo -p 8080:80 calculator-kubernetes-demo:latest
+```
+
+Visit [http://localhost:8080](http://localhost:8080) in a browser.
+
+Verify the running container and review its logs:
+
+```bash
+docker ps
+docker logs calculator-demo
+```
+
+Stop and remove the container when finished:
+
+```bash
+docker stop calculator-demo
+docker rm calculator-demo
+```
 
 ## Calculator controls
 
