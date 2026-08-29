@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: calculator
-          image: <DOCKERHUB_USERNAME>/calculator-kubernetes-demo:latest
+          image: zapdos0606/calculator-kubernetes-demo:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 80
