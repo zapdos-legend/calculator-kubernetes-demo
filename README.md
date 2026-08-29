@@ -6,9 +6,9 @@ This project demonstrates a complete beginner-friendly application and DevOps wo
 
 ## Current phase
 
-**Phase 5 — Kubernetes deployment preparation**
+**Phase 6 — GitHub Actions Docker publishing**
 
-The calculator frontend is packaged in a simple Nginx-based Docker image, with AWS CodeBuild setup and Docker Hub publishing instructions. Kubernetes manifests now prepare two calculator replicas and a NodePort Service for a future Killercoda demonstration; this phase does not deploy them to a cluster.
+GitHub Actions now builds the existing Docker image remotely and publishes it to Docker Hub. The existing Kubernetes manifests remain preparation for a future Killercoda demonstration and are not deployed in this phase.
 
 ## Technologies used
 
@@ -183,3 +183,14 @@ Delete the demo resources when finished:
 kubectl delete -f kubernetes/service.yaml
 kubectl delete -f kubernetes/deployment.yaml
 ```
+
+## Phase 6 - GitHub Actions Docker Publishing
+
+GitHub Actions builds the Docker image remotely whenever a commit is pushed to `main` or the workflow is run manually. Docker Desktop is not required locally.
+
+The workflow authenticates to Docker Hub using these GitHub repository secrets:
+
+- `DOCKERHUB_USERNAME`
+- `DOCKERHUB_TOKEN`
+
+It publishes the image as `zapdos0606/calculator-kubernetes-demo:latest`.
